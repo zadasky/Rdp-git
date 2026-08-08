@@ -1,5 +1,4 @@
-name: Windows RDP Tailscale (Optimized)
-
+Name: Windows RDP Tailscale (Optimized)
 on:
   workflow_dispatch:
 
@@ -20,16 +19,9 @@ jobs:
         run: |
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-          
-          # USERNAME DAN PASSWORD
-          $Username = "Farel"
-          $Password = ConvertTo-SecureString "Farel1" -AsPlainText -Force
-          
-          # Buat user baru & masukkan ke group akses
-          Remove-LocalUser -Name $Username -ErrorAction SilentlyContinue
-          New-LocalUser -Name $Username -Password $Password -FullName $Username -AccountNeverExpires
-          Add-LocalGroupMember -Group "Administrators" -Member $Username
-          Add-LocalGroupMember -Group "Remote Desktop Users" -Member $Username
+          # Buat user baru 'RdpUser' agar tidak bentrok dengan Administrator sistem
+          net user RdpUser "RdpPassword123!" /add /y
+          net localgroup administrators RdpUser /add
 
       - name: Optimize Performance & FPS for RDP
         run: |
