@@ -1,4 +1,4 @@
-Name: Windows RDP Tailscale (Optimized)
+name: Windows RDP Tailscale (Optimized)
 on:
   workflow_dispatch:
 
