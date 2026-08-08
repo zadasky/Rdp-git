@@ -21,11 +21,12 @@ jobs:
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           
-          # UBAH USERNAME DAN PASSWORD DI BAWAH INI
-          $Username = "RdpUser"
-          $Password = ConvertTo-SecureString "RdpPassword123!" -AsPlainText -Force
+          # USERNAME DAN PASSWORD
+          $Username = "Farel"
+          $Password = ConvertTo-SecureString "Farel1" -AsPlainText -Force
           
           # Buat user baru & masukkan ke group akses
+          Remove-LocalUser -Name $Username -ErrorAction SilentlyContinue
           New-LocalUser -Name $Username -Password $Password -FullName $Username -AccountNeverExpires
           Add-LocalGroupMember -Group "Administrators" -Member $Username
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member $Username
