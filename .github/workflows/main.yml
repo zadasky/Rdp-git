@@ -1,40 +1,37 @@
-Name: Windows RDP Tailscale (Optimized)
+name: Windows RDP Tailscale (Optimized)
+
 on:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
-      - name: Download & Install Tailscale
-        run: |
-          invoke-WebRequest -Uri "https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe" -OutFile "tailscale-setup.exe"
-          Start-Process -FilePath ".\tailscale-setup.exe" -ArgumentList "/quiet" -Wait
-
-      - name: Connect to Tailscale
-        run: |
-          & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --unattended
-
-      - name: Enable Remote Desktop & Set Credentials
-        run: |
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
-          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-          # Buat user baru 'RdpUser' agar tidak bentrok dengan Administrator sistem
-          net user RdpUser "RdpPassword123!" /add /y
-          net localgroup administrators RdpUser /add
-
-      - name: Optimize Performance & FPS for RDP
-        run: |
-          Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects' -Name "VisualFXSetting" -Value 2
-          New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations" -Name "RDP-Tcp" -Force | Out-Null
-          Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" -Name "DWMFRAMEINTERVAL" -Value 15 -Type Dword
-          Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name "Wallpaper" -Value ""
-
-      - name: Keep RDP Alive
-        run: |
-          $i = 0
-          while ($true) {
-              Start-Sleep -Seconds 60
-              $i++
-              Write-Output "RDP Active: $i minutes"
-          }
+    - name: Download & Install Tailscale
+      run: |
+        invoke-WebRequest -Uri "https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe" -OutFile "tailscale-setup.exe"
+        Start-Process -FilePath ".\tailscale-setup.exe" -ArgumentList "/quiet" -Wait
+    - name: Connect to Tailscale
+      run: |
+        & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --unattended --accept-routes --reset
+    - name: Enable Remote Desktop & Set Credentials
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        
+        $Password = ConvertTo-SecureString "RdpPassword123!" -AsPlainText -Force
+        Set-LocalUser -Name "runneradmin" -Password $Password
+    - name: Optimize Performance & FPS for RDP
+      run: |
+        Set-ItemProperty -Path 'HKCU:\Software\Microsoft\VisualFXSetting' -Name "VisualFXSetting" -Value 2 -ErrorAction SilentlyContinue
+        New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations" -Name "RDP-Tcp" -Force | Out-Null
+        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" -Name "DWMFRAMEINTERVAL" -Value 15 -Type Dword
+    - name: Keep RDP Alive
+      run: |
+        $i = 0
+        while ($true) {
+            Start-Sleep -Seconds 60
+            $i++
+            Write-Output "RDP Active: $i minutes"
+        }
