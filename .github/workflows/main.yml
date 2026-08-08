@@ -16,14 +16,16 @@ jobs:
         run: |
           & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --unattended --accept-routes
 
-      - name: Enable Remote Desktop & Set Credentials
+      - name: Enable Remote Desktop & Fix Network
         run: |
-          # Aktifkan RDP di Registry
+          # Aktifkan RDP di Registry & Matikan NLA (Network Level Authentication)
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 0
           
-          # Buka Firewall untuk Port 3389 & RDP Group
+          # Buka Port Firewall Lengkap
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-          New-NetFirewallRule -DisplayName "Allow RDP Port" -Direction Inbound -LocalPort 3389 -Protocol TCP -Action Allow -ErrorAction SilentlyContinue
+          New-NetFirewallRule -DisplayName "RDP TCP 3389" -Direction Inbound -LocalPort 3389 -Protocol TCP -Action Allow -ErrorAction SilentlyContinue
+          New-NetFirewallRule -DisplayName "RDP UDP 3389" -Direction Inbound -LocalPort 3389 -Protocol UDP -Action Allow -ErrorAction SilentlyContinue
 
           # Atur Password runneradmin
           $Password = ConvertTo-SecureString "RdpPassword123!" -AsPlainText -Force
@@ -32,7 +34,6 @@ jobs:
       - name: Optimize Performance & FPS for RDP
         run: |
           Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects' -Name "VisualFXSetting" -Value 2
-          New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations" -Name "RDP-Tcp" -Force | Out-Null
           Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" -Name "DWMFRAMEINTERVAL" -Value 15 -Type Dword
 
       - name: Keep RDP Alive
