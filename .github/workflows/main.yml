@@ -1,4 +1,4 @@
-Name: RDP
+name: RDP
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
 
       - name: Create RDP User
         run: |
-          $password = "farel1"
+          $password = "Farel#123456"
           $securePass = ConvertTo-SecureString $password -AsPlainText -Force
           New-LocalUser -Name "Skyro" -Password $securePass -AccountNeverExpires
           Add-LocalGroupMember -Group "Administrators" -Member "Skyro"
